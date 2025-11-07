@@ -1,0 +1,379 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>ring</title>
+    <link rel="stylesheet" href="../ldoc_new.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>ring</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Basic_requirements">Basic requirements </a></li>
+<li><a href="#Installing">Installing </a></li>
+<li><a href="#Importing">Importing </a></li>
+<li><a href="#Usage">Usage </a></li>
+<li><a href="#Testing">Testing </a></li>
+</ul>
+
+
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><strong>README</strong></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+
+<h1>ring</h1>
+
+<p>An entity component system implementation (ECS) for lua.</p>
+
+<p><a name="Basic_requirements"></a></p>
+<h2>Basic requirements</h2>
+
+<p>The basic requirements to use ring are just to</p>
+
+<ol>
+    <li>Install it</li>
+    <li>Import it</li>
+    <li>Create a world</li>
+    <li>Call the world update function every tick</li>
+    <li>Call the world process function every tick, after the world update function</li>
+</ol>
+
+<p>Ring was made to do game development with <a href="https://love2d.org/">Love</a>, but it
+isn't necessary for you to use it with <a href="https://love2d.org/">Love</a>, as long as
+you follow the steps above.</p>
+
+<p><a name="Installing"></a></p>
+<h2>Installing</h2>
+
+<p>The easiest way to do this is just to clone the git repository.</p>
+
+<p><code>mkdir ring &amp;&amp; git clone git@github.com:eherz1/ring.git ring</code></p>
+
+<p>... or, if you prefer, it might be nice to use a lib directory.</p>
+
+<p><code>mkdir -p lib/ring &amp;&amp; clone git@github.com:eherz1/ring.git lib/ring</code></p>
+
+<p><a name="Importing"></a></p>
+<h2>Importing</h2>
+
+<p>You should add ring to the lua path so you can import it easily.</p>
+
+<p>Here is a start script for <a href="https://love2d.org/">Love</a> that will work on a Mac.</p>
+
+
+<pre>
+#!/usr/bin/env sh
+
+# Path to the love executable on your system
+LOVE=<span class="string">"/Applications/love.app/Contents/MacOS/love"</span>
+
+# List of libraries to add to the lua path
+export LUA_PATH=<span class="string">"$LUA_PATH;lib/ring/?.lua;"</span>
+#export LUA_PATH=<span class="string">"$LUA_PATH;lib/&lt;libname&gt;/?.lua;"</span>
+
+#echo $LUA_PATH
+
+$LOVE src
+</pre>
+
+
+<p>It assumes that your project will keep its source files in a directory called
+<code>src</code> and that the entry point for <a href="https://love2d.org/">Love</a> will be a file
+called <code>main.lua</code> inside the <code>src</code> directory.</p>
+
+<p><a name="Usage"></a></p>
+<h2>Usage</h2>
+
+
+<p>Creating a world is as simple as calling <code>ring:newWorld()</code>.</p>
+
+
+<pre>
+<span class="keyword">local</span> ring = <span class="global">require</span> <span class="string">"ring"</span>
+
+<span class="keyword">local</span> world = ring.<span class="function-name">newWorld</span>()
+</pre>
+
+
+<h3>Adding systems</h3>
+
+<p>Creating a world in itself is not very useful unless you add some systems.</p>
+
+<h3>A note about syntax</h3>
+
+<p>LUA is a bit limited in its support for OOP, so we follow a compositional
+pattern. Basically how it works is that a constructor function such as
+ring.newSystem accepts a single argument, table <code>t</code>. ring.newSystem creates a
+new table, <code>u</code>, and assigns all properties of <code>t</code> onto <code>u</code>. It then <em>decorates</em>
+<code>u</code> with additional properties.</p>
+
+
+<p>Sometimes, this means that a key of table <code>t</code>
+is overwritten on <code>u</code>, so be careful to avoid using the same keys as ring
+does internally. Most of the time, it means that optional functions will
+be given stub implementations if they are not present. In some cases, it
+means that <code>t</code>'s implementation of a function will be replaced with another,
+which <em>also</em> invokes <code>t</code>'s implementation.</p>
+
+<p>This pattern is lightweight, fits LUA well,
+and in general doesn't cause too many issues, and it allows us to avoid
+having to deal with LUA prototypes. Although object constructors have
+to do more work to copy properties of the origin table than when assigning
+a prototype, once a system is constructed this way, function invocations
+require no call to the __index metamethod.</p>
+
+<p>There are two ways of defining a system:</p>
+
+<h4>Table syntax</h4>
+
+<p>Table syntax is the default syntax - just because that's what I prefer -
+although it requires that you explicitly declare 'self' as a parameter to
+your functions, or else LUA won't support calling functions on the table
+using the colon (:) operator. Also, you must use comma (,) after your
+function declarations, because you're declaring table properties.</p>
+
+
+<pre>
+<span class="keyword">local</span> MySystem = ring.<span class="function-name">newSystem</span>({
+  interestingVariable = <span class="number">5</span>,
+
+  update = <span class="keyword">function</span>(self, dt)
+    self.interestingVariable = self.interestingVariable + self.interestingVariable / <span class="number">2</span>
+  <span class="keyword">end</span>,
+
+  process = <span class="keyword">function</span>(self)
+    <span class="comment">-- Do great things
+</span>  <span class="keyword">end</span>
+})
+</pre>
+
+
+<p>Notice that we haven't declared initialize or destroy functions. It's not
+that our system won't have them - it will - but their implementations will
+be set to the default implementation for ring.newSystem (no-op) because they
+are optional.</p>
+
+<h4>Class syntax</h4>
+
+<p>Class syntax uses the colon (:) operator to declare the system. You can then
+pass the completed table to ring.newSystem.</p>
+
+
+<pre>
+<span class="keyword">local</span> _MySystem = {}
+
+_MySystem.interestingVariable = <span class="number">5</span>
+
+<span class="keyword">function</span> _MySystem:<span class="function-name">update</span>(dt)
+  self.interestingVariable = self.interestingVariable + self.interestingVariable / <span class="number">2</span>
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> _MySystem:<span class="function-name">process</span>()
+  <span class="comment">-- Do great things
+</span><span class="keyword">end</span>
+
+<span class="keyword">local</span> MySystem = ring.<span class="function-name">newSystem</span>(_MySystem)
+</pre>
+
+
+<p>It's a little bit cleaner, but lacks some readability, in my opinion.</p>
+
+<h3>Creating a new base system</h3>
+
+<p>The first type of system is the base system. Base systems are very simple, and
+don't offer much more than the ability to implement the update and process
+functions. Here's an example of a system which calculates and prints the game's
+FPS, implemented using love's <code>graphics.print</code> function.</p>
+
+
+<pre>
+<span class="keyword">local</span> FpsSystem = ring:<span class="function-name">newSystem</span>({
+  initialize = <span class="keyword">function</span>(self)
+    self.frames = <span class="number">0</span>
+    self.timer = <span class="number">0</span>
+    self.fps = <span class="number">0</span>
+  <span class="keyword">end</span>,
+
+  update = <span class="keyword">function</span>(self, dt)
+    self.timer = self.timer + dt
+    self.frames = self.frames + <span class="number">1</span>
+    <span class="keyword">if</span> self.timer &gt;= <span class="number">1</span> <span class="keyword">then</span>
+      self.fps = self.frames
+      self.frames = <span class="number">0</span>
+      self.timer = <span class="number">0</span>
+    <span class="keyword">end</span>
+  <span class="keyword">end</span>,
+
+  process = <span class="keyword">function</span>(self)
+    love.graphics.<span class="global">print</span>(<span class="string">"fps:"</span> .. self.fps)
+  <span class="keyword">end</span>
+})
+
+world:<span class="function-name">addSystem</span>(FpsSystem)
+</pre>
+
+
+<h3>Tying ring into your game loop</h3>
+
+<p>In order for our new system to work, we need to make sure we are executing
+the <code>update</code> and <code>process</code> functions of our world every tick. In love, this
+is done like so:</p>
+
+
+<pre>
+<span class="keyword">function</span> love.<span class="function-name">update</span>(dt)
+  world:<span class="function-name">update</span>(dt)
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> love.<span class="function-name">draw</span>()
+  world:<span class="function-name">process</span>()
+<span class="keyword">end</span>
+</pre>
+
+
+<p>You should now be able to run your game and see the FPS displayed.</p>
+
+<h3>Entities</h3>
+
+<p>In ring, in the traditional ECS way, entities are only ints. When you create an
+entity you get an int back, and when you want to do something with that entity,
+you call a method of <code>World</code> and provide the int as the entity's id.</p>
+
+
+<pre>
+<span class="keyword">local</span> fighter = world:<span class="function-name">createEntity</span>()
+
+world:<span class="function-name">addComponent</span>(fighter, <span class="string">"health"</span>, {
+  hp = <span class="number">110</span>,
+  mp = <span class="number">100</span>
+})
+
+<span class="keyword">local</span> fighterHealth = world:<span class="function-name">getComponent</span>(fighter, <span class="string">"health"</span>)
+fighterHealth.hp = fighterHealth.hp - <span class="number">10</span>
+</pre>
+
+
+<h3>EntitySystem</h3>
+
+<p>In order to make working with entities easier, the <code>EntitySystem</code> is provided.
+<code>EntitySystem</code> works on a set of entities every tick, adding the functions
+<code>match(entityId)</code>, <code>updateEntity(entityId, dt)</code> and <code>processEntity(entityId)</code>.</p>
+
+
+<pre>
+<span class="comment">-- If an entity has a health component and it's hp falls below zero, then
+</span><span class="comment">-- add a 'dead' component.
+</span><span class="keyword">local</span> DeathSystem = world:<span class="function-name">createEntitySystem</span>({
+  matchEntity = <span class="keyword">function</span>(self, entityId)
+    <span class="keyword">return</span> self.world:<span class="function-name">hasComponent</span>(entityId, <span class="string">"health"</span>)
+  <span class="keyword">end</span>,
+
+  updateEntity = <span class="keyword">function</span>(self, entityId, dt)
+    <span class="keyword">local</span> health = self.world:<span class="function-name">getComponent</span>(entityId, <span class="string">"health"</span>)
+    <span class="keyword">if</span> health.hp &lt;= <span class="number">0</span> <span class="keyword">then</span>
+      self.world:<span class="function-name">addComponent</span>(entityId, <span class="string">"dead"</span>)
+    <span class="keyword">end</span>
+  <span class="keyword">end</span>,
+
+  processEntity = <span class="keyword">function</span>(self, entityId)
+    <span class="comment">-- noop
+</span>  <span class="keyword">end</span>
+})
+
+<span class="comment">-- If an entity has a 'dead' component, execute its optional cleanup and
+</span><span class="comment">-- remove it from the world.
+</span><span class="keyword">local</span> ReaperSystem = world:<span class="function-name">createEntitySystem</span>({
+  matchEntity = <span class="keyword">function</span>(self, entityId)
+    <span class="keyword">return</span> self.world:<span class="function-name">hasComponent</span>(entityId, <span class="string">"dead"</span>)
+  <span class="keyword">end</span>,
+
+  updateEntity = <span class="keyword">function</span>(self, entityId)
+    <span class="keyword">local</span> cleanup = self.world:<span class="function-name">hasComponent</span>(entityId, <span class="string">"cleanup"</span>)
+    <span class="keyword">if</span> cleanup <span class="keyword">then</span>
+      <span class="function-name">cleanup</span>(entityId)
+    <span class="keyword">end</span>
+    self.world:<span class="function-name">removeEntity</span>(entityId)
+  <span class="keyword">end</span>
+})
+
+world:<span class="function-name">addSystem</span>(DeathSystem)
+world:<span class="function-name">addSystem</span>(ReaperSystem)
+</pre>
+
+
+<h3>EventSystem</h3>
+
+<p>Sometimes it can be useful to listen to events that happen on the world. For
+that purpose, you can use <code>EventSystem</code>.</p>
+
+
+<pre>
+<span class="comment">-- If an entity has a 'composite' component, then when it's created,
+</span><span class="comment">-- also call createEntity for each of its children, and assign each
+</span><span class="comment">-- of its children a parent component which refers to the entityId
+</span><span class="comment">-- of the parent.
+</span><span class="keyword">local</span> CompositeSystem = ring.<span class="function-name">newEventSystem</span>({
+  onEntityCreated = <span class="keyword">function</span>(self, entityId)
+    <span class="keyword">local</span> composite = self.world:<span class="function-name">getComponent</span>(entityId, <span class="string">"composite"</span>)
+    <span class="keyword">if</span> composite <span class="keyword">then</span>
+      <span class="keyword">for</span> _, child <span class="keyword">in</span> <span class="global">ipairs</span>(composite.children) <span class="keyword">do</span>
+        self.world:<span class="function-name">createEntity</span>(child)
+        child.parent = entityId
+      <span class="keyword">end</span>
+    <span class="keyword">end</span>
+  <span class="keyword">end</span>
+})
+
+world:<span class="function-name">addSystem</span>(CompositeSystem)
+</pre>
+
+
+<p><a name="Testing"></a></p>
+<h2>Testing</h2>
+
+<p>Ring is still pretty small and most of its functionality is being tested by its
+use in my own projects, so there is no unit test suite. However, that will
+likely change in the future. If you'd like to contribute to ring, let me know.
+And if you find any bugs, please do report them and I will get them fixed as
+soon as I can.</p>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2025-05-25 21:43:01 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

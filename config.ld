@@ -1,0 +1,9 @@
+project = "ring"
+title = "ring"
+description = "An entity component system implementation (ECS) for lua."
+format = "discount"
+file = "ring.lua"
+readme = "README.md"
+style = "!new"
+kind_names = {}
+examples = {}

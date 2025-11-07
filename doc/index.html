@@ -1,0 +1,597 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>ring</title>
+    <link rel="stylesheet" href="ldoc_new.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>ring</h1>
+
+
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><strong>ring</strong></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="topics/README.md.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>ring</code></h1>
+<p>An entity component system implementation (ECS) for lua.</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#newSystem">newSystem (definition)</a></td>
+	<td class="summary">Create a new <a href="index.html#System">ring.System</a> table.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#newEventSystem">newEventSystem (definition)</a></td>
+	<td class="summary">Create a new <a href="index.html#EventSystem">ring.EventSystem</a> table.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#newEntitySystem">newEntitySystem (definition)</a></td>
+	<td class="summary">Create a new <a href="index.html#EntitySystem">ring.EntitySystem</a> table.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#subjectToParts">subjectToParts (The)</a></td>
+	<td class="summary">Split a <a href="index.html#SubjectString">ring.SubjectString</a> into a <code>ring.SubjectParts</code> array.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#newMessageBus">newMessageBus ()</a></td>
+	<td class="summary">Create a new <a href="index.html#MessageBus">ring.MessageBus</a> table.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#newWorld">newWorld (args)</a></td>
+	<td class="summary">Create a new <a href="index.html#World">ring.World</a> table.</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#SystemDefinition">SystemDefinition</a></td>
+	<td class="summary">A definition of a <a href="index.html#System">ring.System</a>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#System">System</a></td>
+	<td class="summary">A system implementation.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#EventSystemDefinition">EventSystemDefinition</a></td>
+	<td class="summary">A definition of a <a href="index.html#EventSystem">EventSystem</a>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#EventSystem">EventSystem</a></td>
+	<td class="summary">An event system implementation.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#EntitySystemDefinition">EntitySystemDefinition</a></td>
+	<td class="summary">A definition of a <a href="index.html#EntitySystem">ring.EntitySystem</a>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#EntitySystem">EntitySystem</a></td>
+	<td class="summary">An entity system implementation.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#SubjectString">SubjectString</a></td>
+	<td class="summary">A <a href="index.html#MessageBus">ring.MessageBus</a> style subject string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#MessageBus">MessageBus</a></td>
+	<td class="summary">A message bus implementation.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#World">World</a></td>
+	<td class="summary">A world implementation.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "newSystem"></a>
+    <strong>newSystem (definition)</strong>
+    </dt>
+    <dd>
+    Create a new <a href="index.html#System">ring.System</a> table.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">definition</span>
+            <span class="types"><a class="type" href="index.html#SystemDefinition">ring.SystemDefinition</a></span>
+         A <a href="index.html#SystemDefinition">ring.SystemDefinition</a> table.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="index.html#System">ring.System</a></span>
+        A <a href="index.html#System">ring.System</a> table.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "newEventSystem"></a>
+    <strong>newEventSystem (definition)</strong>
+    </dt>
+    <dd>
+    Create a new <a href="index.html#EventSystem">ring.EventSystem</a> table.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">definition</span>
+            <span class="types"><a class="type" href="index.html#EventSystemDefinition">ring.EventSystemDefinition</a></span>
+         A <a href="index.html#EventSystemDefinition">ring.EventSystemDefinition</a> table.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "newEntitySystem"></a>
+    <strong>newEntitySystem (definition)</strong>
+    </dt>
+    <dd>
+    Create a new <a href="index.html#EntitySystem">ring.EntitySystem</a> table.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">definition</span>
+            <span class="types"><a class="type" href="index.html#EntitySystemDefinition">EntitySystemDefinition</a></span>
+         A <a href="index.html#EntitySystemDefinition">ring.EntitySystemDefinition</a> table.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="index.html#EntitySystem">EntitySystem</a></span>
+        A <a href="index.html#EntitySystem">ring.EntitySystem</a> table.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "subjectToParts"></a>
+    <strong>subjectToParts (The)</strong>
+    </dt>
+    <dd>
+    Split a <a href="index.html#SubjectString">ring.SubjectString</a> into a <code>ring.SubjectParts</code> array.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">The</span>
+            <span class="types"><a class="type" href="index.html#SubjectString">ring.SubjectString</a></span>
+         subject to listen to.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "newMessageBus"></a>
+    <strong>newMessageBus ()</strong>
+    </dt>
+    <dd>
+    Create a new <a href="index.html#MessageBus">ring.MessageBus</a> table.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "newWorld"></a>
+    <strong>newWorld (args)</strong>
+    </dt>
+    <dd>
+    Create a new <a href="index.html#World">ring.World</a> table.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">args</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="index.html#World">World</a></span>
+        A <a href="index.html#World">ring.World</a> table.
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "SystemDefinition"></a>
+    <strong>SystemDefinition</strong>
+    </dt>
+    <dd>
+    A definition of a <a href="index.html#System">ring.System</a>.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">initialize</span>
+            <span class="types"><span class="type">()=>void</span></span>
+         An optional function which will be called when the system is added to a world.
+        </li>
+        <li><span class="parameter">destroy</span>
+            <span class="types"><span class="type">()=>void</span></span>
+         An optional function which will be called when the system is removed from a world.
+        </li>
+        <li><span class="parameter">update</span>
+            <span class="types"><span class="type">(delta)=>void</span></span>
+         A required function that computes updates before frame processing.
+        </li>
+        <li><span class="parameter">process</span>
+            <span class="types"><span class="type">()=>void</span></span>
+         A required function which does per-frame processing.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "System"></a>
+    <strong>System</strong>
+    </dt>
+    <dd>
+    A system implementation.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">initialize</span>
+            <span class="types"><span class="type">()=>void</span></span>
+         An optional function which will be called when the system is added to a world.
+        </li>
+        <li><span class="parameter">destroy</span>
+            <span class="types"><span class="type">()=>void</span></span>
+         An optional function which will be called when the system is removed from a world.
+        </li>
+        <li><span class="parameter">update</span>
+            <span class="types"><span class="type">(dt)=>void</span></span>
+         A required function which performs updates before frame processing.
+        </li>
+        <li><span class="parameter">process</span>
+            <span class="types"><span class="type">()=>void</span></span>
+         A required function which performs per-frame processing.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "EventSystemDefinition"></a>
+    <strong>EventSystemDefinition</strong>
+    </dt>
+    <dd>
+    A definition of a <a href="index.html#EventSystem">EventSystem</a>.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">callback</span>
+            <span class="types"><span class="type">{{subject,</span></span>
+        },...} listeners A set of subjects to listen to.
+        </li>
+        <li><span class="parameter">initialize</span>
+            <span class="types"><span class="type">()=>void</span></span>
+         Optional function which will be called when the system is initialized.
+        </li>
+        <li><span class="parameter">destroy</span>
+            <span class="types"><span class="type">()=>void</span></span>
+         Optional function which will be called when the system is destroyed.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "EventSystem"></a>
+    <strong>EventSystem</strong>
+    </dt>
+    <dd>
+    An event system implementation.
+ EventSystem is a system that is primarily interested in responding to
+ events that occur on the world to which the system belongs. It accepts a
+ set of subjects mapped to callback functions, the subjects of which will be
+ subscribed to automatically during initialization and unsubscribed from
+ during destruction. The system may implement update and process functions
+ as well, but these are considered optional.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "EntitySystemDefinition"></a>
+    <strong>EntitySystemDefinition</strong>
+    </dt>
+    <dd>
+    A definition of a <a href="index.html#EntitySystem">ring.EntitySystem</a>.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">initialize</span>
+            <span class="types"><span class="type">()=>void</span></span>
+         An optional function which will be called when the system is added to a world.
+        </li>
+        <li><span class="parameter">destroy</span>
+            <span class="types"><span class="type">()=>void</span></span>
+         An optional function which will be called when the system is removed from a world.
+        </li>
+        <li><span class="parameter">Required</span>
+            <span class="types"><span class="type">(entityId)=>void</span></span>
+         function which will be called once per-entity to perform per-frame processing.
+        </li>
+        <li><span class="parameter">Required</span>
+            <span class="types"><span class="type">(entityId)=>void</span></span>
+         function which will be called once per-entity to perform per-frame processing.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "EntitySystem"></a>
+    <strong>EntitySystem</strong>
+    </dt>
+    <dd>
+    An entity system implementation.
+ An entity system keeps a set of entity IDs and calls its <code>updateEntity</code>
+ and <code>processEntity</code> functions iteratively for each entity ID in the set.
+ Membership in the set is determined by a call to <code>matchEntity</code> on the
+ following events,
+ (1) <code>&quot;+#&quot;</code> aka <code>entity created</code>,
+ (2) <code>&quot;-#&quot;</code> aka <code>entity destroyed</code>,
+ (3) <code>&quot;+@&quot;</code> aka <code>component added</code>,
+ (4) <code>&quot;-@&quot;</code> aka <code>component removed</code>.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">initialize</span>
+            <span class="types"><span class="type">()=>void</span></span>
+         An optional function which will be called when the system is added to a world.
+        </li>
+        <li><span class="parameter">destroy</span>
+            <span class="types"><span class="type">()=>void</span></span>
+         An optional function which will be called when the system is removed from a world.
+        </li>
+        <li><span class="parameter">updateEntity</span>
+            <span class="types"><span class="type">(dt,entityId)=>void</span></span>
+         A required function which performs updates before frame processing on all matching entities.
+        </li>
+        <li><span class="parameter">processEntity</span>
+            <span class="types"><span class="type">()=>void</span></span>
+         A required function which performs per-frame processing on all matching entities.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "SubjectString"></a>
+    <strong>SubjectString</strong>
+    </dt>
+    <dd>
+    A <a href="index.html#MessageBus">ring.MessageBus</a> style subject string.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "MessageBus"></a>
+    <strong>MessageBus</strong>
+    </dt>
+    <dd>
+    A message bus implementation.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">publish</span>
+            <span class="types"><span class="type">(subject,message)=>void</span></span>
+
+
+
+        </li>
+        <li><span class="parameter">subscribe</span>
+            <span class="types"><span class="type">(subject,callback)=>void</span></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "World"></a>
+    <strong>World</strong>
+    </dt>
+    <dd>
+    A world implementation.
+ World represents a context in which a set of entities
+ with various compositional components are acted upon by a ordered set of
+ of systems.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">subscribe</span>
+            <span class="types"><span class="type">(subject,callback)=>void</span></span>
+         Subscribe to a <a href="index.html#SubjectString">ring.SubjectString</a>.
+        </li>
+        <li><span class="parameter">unsubscribe</span>
+            <span class="types"><span class="type">(subject,callback)=>void</span></span>
+         Unsubscribe from a <a href="index.html#SubjectString">ring.SubjectString</a>.
+        </li>
+        <li><span class="parameter">publish</span>
+            <span class="types"><span class="type">(subject,message)=>void</span></span>
+         Publish a message to a <a href="index.html#SubjectString">ring.SubjectString</a>.
+        </li>
+        <li><span class="parameter">putComponent</span>
+            <span class="types"><span class="type">(entityId,componentName,value)=>void</span></span>
+         Add a component to an entity. The form of a component is unstructured, but if values are provided, the component will be initialized with those values. Otherwise, the component will be initialized to boolean 'true'. <em>Aliases: putc,addComponent,addc.</em>
+        </li>
+        <li><span class="parameter">deleteComponent</span>
+            <span class="types"><span class="type">(entityId,componentName)=>void</span></span>
+         Delete a component from an entity. <em>Aliases: delc,removeComponent,remc.</em>
+        </li>
+        <li><span class="parameter">getComponent</span>
+            <span class="types"><span class="type">(entityId,componentName,[componentKey])=>void</span></span>
+         Get a copy of a component value or a copy of the entire component table. <em>Aliases: getc.</em>
+        </li>
+        <li><span class="parameter">hasComponent</span>
+            <span class="types"><span class="type">(entityId,componentName)=>boolean</span></span>
+         Check whether a entity has a component. <em>Aliases: hasc.</em>
+        </li>
+        <li><span class="parameter">createEntity</span>
+            <span class="types"><span class="type">({componentName,defaults},...},[name])=>void</span></span>
+         Create an entity.
+        </li>
+        <li><span class="parameter">getEntity</span>
+            <span class="types"><span class="type">(name)=>void</span></span>
+         Get an entity by name.
+        </li>
+        <li><span class="parameter">destroyEntity</span>
+            <span class="types"><span class="type">(entityId)=>void</span></span>
+         Destroy an entity.
+        </li>
+        <li><span class="parameter">addSystem</span>
+            <span class="types"><span class="type">(system,[name])=>void</span></span>
+         Add a system to this world.
+        </li>
+        <li><span class="parameter">getSystem</span>
+            <span class="types"><span class="type">(name)=>void</span></span>
+         Get a system from this world.
+        </li>
+        <li><span class="parameter">removeSystem</span>
+            <span class="types"><span class="type">(systemOrName)=>void</span></span>
+         Remove a system from this world.
+        </li>
+        <li><span class="parameter">update</span>
+            <span class="types"><span class="type">(dt)=>void</span></span>
+         Perform world updates.
+        </li>
+        <li><span class="parameter">process</span>
+            <span class="types"><span class="type">()=>void</span></span>
+         Perform world per-frame processing.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2025-05-27 14:34:21 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
