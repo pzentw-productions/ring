@@ -1,6 +1,53 @@
 # ring
 
-An entity component system implementation (ECS) for lua.
+An entity component system (ECS) implemented entirely in Lua, originally built
+for games using [LÖVE](https://love2d.org/).
+
+## Status: pre-alpha
+
+Ring is experimental. Expect bugs, incomplete documentation, and breaking API
+changes. It is not production-ready. The current implementation has a small
+regression suite, but its architecture needs further work before a stable release.
+
+## What Ring is good at
+
+- Expressing game behavior with plain Lua tables, named components, and integer
+  entity IDs, with little setup or ceremony.
+- Organizing logic into systems with readable matching, update, and processing
+  callbacks.
+- Keeping cached sets of matching entities, refreshed by world events rather
+  than scanning every entity on every frame.
+- Exploring ECS ideas and prototyping small Lua games. The library is a single
+  source file and does not require LÖVE.
+
+## Limitations
+
+- Ring is not a packed-data ECS. Component access involves Lua table lookups,
+  and entity processing uses per-entity callbacks. There are no performance
+  benchmarks or guarantees for large simulations.
+- Component changes notify every entity system through a message bus. Dispatch
+  copies subject arrays and traverses routing nodes, adding allocation and
+  bookkeeping costs.
+- Component ownership and mutation rules are conventions, not runtime protections.
+  Direct writes can leave cached system membership stale.
+- Callbacks run synchronously. Structural changes during iteration and reentrant
+  event handlers need further definition and testing. Entity and listener order
+  is unspecified; systems run in insertion order.
+- Projects needing a stable API, proven lifecycle behavior, or predictable frame
+  times should not rely on this pre-alpha without their own evaluation.
+
+## Future enhancements
+
+These are areas for exploration, not committed features or a release schedule:
+
+- Revisit the architecture around component ownership, mutation, and query
+  membership while preserving straightforward Lua syntax.
+- Define structural-change timing and callback behavior, including safe entity
+  creation and removal during system processing.
+- Reduce unnecessary membership checks and message-bus allocations.
+- Benchmark realistic workloads before choosing storage or iteration changes.
+- Expand lifecycle and event regression coverage, validate supported Lua/LuaJIT
+  versions, and bring examples and generated API documentation up to date.
 
 ## Basic requirements
 
@@ -20,11 +67,11 @@ you follow the steps above.
 
 The easiest way to do this is just to clone the git repository.
 
-`mkdir ring && git clone git@github.com:eherz1/ring.git ring`
+`git clone git@github.com:pzentw-productions/ring.git`
 
 ... or, if you prefer, it might be nice to use a lib directory.
 
-`mkdir -p lib/ring && clone git@github.com:eherz1/ring.git lib/ring`
+`git clone git@github.com:pzentw-productions/ring.git lib/ring`
 
 ## Importing
 
@@ -54,7 +101,7 @@ called `main.lua` inside the `src` directory.
 ## Usage
 
 
-Creating a world is as simple as calling `ring:newWorld()`.
+Creating a world is as simple as calling `ring.newWorld()`.
 
 ```lua
 local ring = require "ring"
@@ -149,7 +196,7 @@ functions. Here's an example of a system which calculates and prints the game's
 FPS, implemented using love's `graphics.print` function.
 
 ```lua
-local FpsSystem = ring:newSystem({
+local FpsSystem = ring.newSystem({
   initialize = function(self)
     self.frames = 0
     self.timer = 0
@@ -207,26 +254,41 @@ world:addComponent(fighter, "health", {
 })
 
 local fighterHealth = world:getComponent(fighter, "health")
-fighterHealth.hp = fighterHealth.hp - 10
+world:setComponent(fighter, "health", "hp", fighterHealth.hp - 10)
 ```
+
+### Component ownership and mutation
+
+**Do not mutate components directly.** Use `world:setComponent` so change events
+are published and system membership is refreshed.
+
+`getComponent` returns a borrowed reference, not a copy. Treat that reference,
+its nested tables, and component values received in event callbacks as read-only.
+Tables supplied to `addComponent` or `setComponent` become world-owned by
+convention: do not mutate them afterward or share mutable tables between
+components. Ring does not copy or freeze these tables.
+
+`setComponent` updates the supplied fields; it does not replace the entire
+component. To change nested data, construct a new nested value and assign it
+through `setComponent` rather than editing the existing nested table.
 
 ### EntitySystem
 
 In order to make working with entities easier, the `EntitySystem` is provided.
 `EntitySystem` works on a set of entities every tick, adding the functions
-`match(entityId)`, `updateEntity(entityId, dt)` and `processEntity(entityId)`.
+`matchEntity(entityId)`, `updateEntity(entityId, dt)` and `processEntity(entityId)`.
 
 ```lua
 -- If an entity has a health component and it's hp falls below zero, then
 -- add a 'dead' component.
-local DeathSystem = world:createEntitySystem({
+local DeathSystem = ring.newEntitySystem({
   matchEntity = function(self, entityId)
     return self.world:hasComponent(entityId, "health")
   end,
 
   updateEntity = function(self, entityId, dt)
     local health = self.world:getComponent(entityId, "health")
-    if health.hp <= 0 then
+    if health.hp <= 0 and not self.world:hasComponent(entityId, "dead") then
       self.world:addComponent(entityId, "dead")
     end
   end,
@@ -238,17 +300,21 @@ local DeathSystem = world:createEntitySystem({
 
 -- If an entity has a 'dead' component, execute its optional cleanup and
 -- remove it from the world.
-local ReaperSystem = world:createEntitySystem({
+local ReaperSystem = ring.newEntitySystem({
   matchEntity = function(self, entityId)
     return self.world:hasComponent(entityId, "dead")
   end,
 
   updateEntity = function(self, entityId)
-    local cleanup = self.world:hasComponent(entityId, "cleanup")
+    local cleanup = self.world:getComponent(entityId, "cleanup")
     if cleanup then
       cleanup(entityId)
     end
-    self.world:removeEntity(entityId)
+    self.world:destroyEntity(entityId)
+  end,
+
+  processEntity = function(self, entityId)
+    -- noop
   end
 })
 
@@ -262,23 +328,17 @@ Sometimes it can be useful to listen to events that happen on the world. For
 that purpose, you can use `EventSystem`.
 
 ```lua
--- If an entity has a 'composite' component, then when it's created, 
--- also call createEntity for each of its children, and assign each
--- of its children a parent component which refers to the entityId
--- of the parent.
-local CompositeSystem = ring.newEventSystem({
-  onEntityCreated = function(self, entityId)
-    local composite = self.world:getComponent(entityId, "composite")
-    if composite then
-      for _, child in ipairs(composite.children) do
-        self.world:createEntity(child)
-        child.parent = entityId
-      end
+-- Listen for entity creation. Callbacks receive the system as their first
+-- argument, followed by the event payload.
+local CreationLogSystem = ring.newEventSystem({
+  listeners = {
+    ["+#"] = function(self, entityId, name)
+      print("Created entity " .. entityId .. " (" .. name .. ")")
     end
-  end
+  }
 })
 
-world:addSystem(CompositeSystem)
+world:addSystem(CreationLogSystem)
 ```
 
 ## Testing
