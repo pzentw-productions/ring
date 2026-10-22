@@ -283,8 +283,17 @@ world:addSystem(CompositeSystem)
 
 ## Testing
 
-Ring is still pretty small and most of its functionality is being tested by its
-use in my own projects, so there is no unit test suite. However, that will
-likely change in the future. If you'd like to contribute to ring, let me know.
-And if you find any bugs, please do report them and I will get them fixed as
-soon as I can.
+Run the dependency-free regression suite from the repository root:
+
+```sh
+lua test/ring.lua
+```
+
+It covers component values and events, entity membership and destruction,
+message-bus subscriptions, and system removal and reinitialization.
+
+Component removal events observe the state after removal. Entity creation and
+destruction events each publish once with `(entityId, name)`. `setComponent`
+publishes change events and refreshes system membership; directly mutating a
+returned component table does not publish events. `newWorld(false)` disables
+publication, including the events that keep entity-system membership current.

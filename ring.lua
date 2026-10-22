@@ -111,18 +111,18 @@ ring.newEventSystem = function(definition)
   b.subscriptions = {}
 
   local subscribe = function(self, subject, callback)
-    self.subscriptions[callback] = self.world:subscribe(subject, function(...)
+    self.subscriptions[subject] = self.world:subscribe(subject, function(...)
       callback(self, ...)
     end)
   end
 
   local unsubscribe = function(self, subject, callback)
-    subscriptions[callback] = self.world:unsubscribe(subject,
-                                                     subscriptions[callback])
+    self.world:unsubscribe(subject, self.subscriptions[subject])
+    self.subscriptions[subject] = nil
   end
 
   b.initialize = function(self)
-    for subject, callback in pairs(self.listeners) do
+    for subject, callback in pairs(self.listeners or {}) do
       subscribe(self, subject, callback)
     end
 
@@ -130,7 +130,7 @@ ring.newEventSystem = function(definition)
   end
 
   b.destroy = function(self)
-    for subject, callback in pairs(self.listeners) do
+    for subject, callback in pairs(self.listeners or {}) do
       unsubscribe(self, subject, callback)
     end
 
@@ -152,7 +152,7 @@ end
 -- @tfield ()=>void destroy An optional function which will be called when the system is removed from a world.
 -- @tfield (entityId)=>void Required function which will be called once per-entity to perform updates before per-frame processing.
 -- @tfield (entityId)=>void Required function which will be called once per-entity to perform per-frame processing.
-ring.EventSystemDefinition = {}
+ring.EntitySystemDefinition = {}
 
 --- An entity system implementation.
 -- An entity system keeps a set of entity IDs and calls its `updateEntity`
@@ -162,7 +162,8 @@ ring.EventSystemDefinition = {}
 -- (1) `"+#"` aka `entity created`,
 -- (2) `"-#"` aka `entity destroyed`,
 -- (3) `"+@"` aka `component added`,
--- (4) `"-@"` aka `component removed`.
+-- (4) `"-@"` aka `component removed`,
+-- (5) `"~@"` aka `component changed` via `setComponent`.
 -- @table EntitySystem
 -- @tfield ()=>void initialize An optional function which will be called when the system is added to a world.
 -- @tfield ()=>void destroy An optional function which will be called when the system is removed from a world.
@@ -185,34 +186,29 @@ ring.newEntitySystem = function(definition)
   end
 
   b.initialize = function(self)
-    for _, e in pairs(self.world.entities) do
-      self.entities[e] = self:matchEntity(e)
+    self.entities = {}
+    self.subscriptions = {}
+    for e in pairs(self.world.entities) do recomputeMembership(self, e) end
+
+    local listeners = {
+      ["+#"] = function(e) recomputeMembership(self, e) end,
+      ["-#"] = function(e) self.entities[e] = nil end,
+      ["+@"] = function(_, e) recomputeMembership(self, e) end,
+      ["-@"] = function(_, e) recomputeMembership(self, e) end,
+      ["~@"] = function(_, e) recomputeMembership(self, e) end
+    }
+    for subject, callback in pairs(listeners) do
+      self.subscriptions[subject] = self.world:subscribe(subject, callback)
     end
-
-    self.world:subscribe("+#", function(e)
-      recomputeMembership(self, e)
-    end)
-
-    self.world:subscribe("-#", function(e)
-      recomputeMembership(self, e)
-    end)
-
-    self.world:subscribe("+@", function(_, e)
-      recomputeMembership(self, e)
-    end)
-
-    self.world:subscribe("-@", function(_, e)
-      recomputeMembership(self, e)
-    end)
 
     if definition.initialize then definition.initialize(self) end
   end
 
   b.destroy = function(self)
-    self.world:unsubscribe("+#", self.recomputeMembership)
-    self.world:unsubscribe("-#", self.recomputeMembership)
-    self.world:unsubscribe("+@", self.recomputeMembership)
-    self.world:unsubscribe("-@", self.recomputeMembership)
+    for subject, callback in pairs(self.subscriptions) do
+      self.world:unsubscribe(subject, callback)
+    end
+    self.subscriptions = {}
 
     if definition.destroy then definition.destroy(self) end
   end
@@ -317,19 +313,20 @@ newMessageBusNodeContainer.newMessageBusNode = function()
     return self:subscribeParts(ring.subjectToParts(subject), callback)
   end
 
-  local unsubscribeParts = function(self, parts, callback)
+  local unsubscribeParts
+  unsubscribeParts = function(self, parts, callback)
     if #parts == 0 then
       self.listeners[callback] = nil
     else
       local nextPart = table.remove(parts, 1)
       local nextNode = getOrCreateNodeContainer.getOrCreateNode(self, nextPart)
-      return nextNode:unsubscribeParts(parts, callback)
+      return unsubscribeParts(nextNode, parts, callback)
     end
     return callback
   end
 
   b.unsubscribe = function(self, subject, callback)
-    return unsubscribeParts(self, self:subjectToParts(self, subject), callback)
+    return unsubscribeParts(self, ring.subjectToParts(subject), callback)
   end
 
   local publishPartsContainer = {}
@@ -386,7 +383,7 @@ ring.newMessageBus = function()
   end
 
   b.publish = function(self, subject, ...)
-    self.root:publish(subject, ...)
+    self:publishParts(ring.subjectToParts(subject), ...)
   end
 
   return b
@@ -417,7 +414,7 @@ ring.World = {}
 --- Create a new `ring.World` table.
 -- @treturn World A `ring.World` table.
 ring.newWorld = function(isPublish)
-  isPublish = isPublish ~= nil and isPublish or true
+  if isPublish == nil then isPublish = true end
 
   local b = {}
 
@@ -557,7 +554,7 @@ ring.newWorld = function(isPublish)
 
   local addComponent = function(self, e, c, t)
     local r = addComponentPure(self, e, c, t)
-    publishComponentAdd(self, e, c, t)
+    publishComponentAdd(self, e, c, r)
     return r
   end
 
@@ -566,7 +563,7 @@ ring.newWorld = function(isPublish)
   -- Set Component
 
   local publishComponentSet = function(self, e, c, t)
-    self:publishParts(componentSubjects.add, c, e, t)
+    self:publishParts(componentSubjects.change, c, e, t)
     self:publishParts(self.componentMetadata[c].subjects.change, e, t)
   end
 
@@ -604,9 +601,8 @@ ring.newWorld = function(isPublish)
 
     if not entityComponent then return nil end
 
-    local value = k ~= nil and entityComponent[k] or entityComponent
-
-    return value
+    if k ~= nil then return entityComponent[k] end
+    return entityComponent
   end
 
   b.hasComponent = function(self, e, c)
@@ -631,8 +627,9 @@ ring.newWorld = function(isPublish)
   end
 
   local removeComponent = function(self, e, c)
+    removeComponentPure(self, e, c)
     publishComponentRemove(self, e, c)
-    return removeComponentPure(self, e, c)
+    return e, c
   end
 
   b.removeComponent = isPublish and removeComponent or removeComponentPure
@@ -658,7 +655,6 @@ ring.newWorld = function(isPublish)
 
   local publishEntityCreate = function(self, e, n)
     self:publishParts(entitySubjects.add, e, n)
-    if n then self:publishParts(entitySubjects.add, n, e) end
   end
 
   local createEntityPure = function(self, componentsOrName, components)
@@ -701,13 +697,14 @@ ring.newWorld = function(isPublish)
 
   local publishEntityDestroy = function(self, e, n)
     self:publishParts(entitySubjects.subtract, e, n)
-    if n then self:publishParts(entitySubjects.subtract, n, e) end
   end
 
   local destroyEntityPure = function(self, e)
     self.entities[e] = nil
     local n = self.entityToName[e]
-    removeEntityMetadata(self, e, n)
+    if n then clearEntityName(self, e, n) end
+    for _, component in pairs(self.components) do component[e] = nil end
+    self.entityMetadata[e] = nil
     return e, n
   end
 
@@ -738,11 +735,15 @@ ring.newWorld = function(isPublish)
   end
 
   b.removeSystem = function(self, systemOrName)
-    local i, system = type(systemOrName) == "table" and
-                          findIndexOfSystem(self, systemOrName) or
-                          findIndexOfSystem(self, nameToSystem[systemOrName])
+    local system = type(systemOrName) == "table" and systemOrName or
+                       self.nameToSystem[systemOrName]
+    local i = findIndexOfSystem(self, system)
+    if i == -1 then error("Cannot remove a system that is not in this world") end
     table.remove(self.systems, i)
     system:destroy()
+    for name, namedSystem in pairs(self.nameToSystem) do
+      if namedSystem == system then self.nameToSystem[name] = nil end
+    end
   end
 
   b.getSystem = function(self, name)
